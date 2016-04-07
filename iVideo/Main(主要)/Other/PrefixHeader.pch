@@ -1,0 +1,78 @@
+//
+//  PrefixHeader.pch
+//  iVideo
+//
+//  Created by apple on 15/12/30.
+//  Copyright © 2015年 lvpin. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+
+#ifdef __OBJC__
+
+#ifdef __OPTIMIZE__
+# define NSLog(...) {}
+#else
+# define NSLog(...) NSLog(__VA_ARGS__)
+#endif
+
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
+#import <objc/runtime.h>
+
+#import "UIImage+Additions.h"
+#import "UIView+Additions.h"
+#import "UIButton+Additions.h"
+#import "NSString+Additions.h"
+#import "UIColor+Additions.h"
+#import "NSMutableAttributedString+Additions.h"
+#import "NSTimer+Additions.h"
+#import "LPFunctions.h"
+#import "NSObject+Swizzle.h"
+#import "UIControl+Swizzle.h"
+#import "UIAlertView+Additions.h"
+
+#define iPhone4 ([UIScreen mainScreen].bounds.size.height == 480.0)
+#define iPhone5 ([UIScreen mainScreen].bounds.size.height == 568.0)
+#define iPhone6 ([UIScreen mainScreen].bounds.size.height == 667.0)
+#define iPhone6Plus ([UIScreen mainScreen].bounds.size.height == 736.0)
+
+#define ScreenWidth [UIScreen mainScreen].bounds.size.width
+#define ScreenHeight [UIScreen mainScreen].bounds.size.height
+
+#define PlaybackViewHeight roundf(ScreenWidth * ScreenWidth / ScreenHeight)
+
+// 颜色
+#define LPColor(r, g, b) [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:1.0]
+#define LPColorRGBA(r, g, b, a) [UIColor colorWithRed:(r)/255.0 green:(g)/255.0 blue:(b)/255.0 alpha:a]
+
+// 默认字体颜色
+#define LPNormalColor LPColor(255, 255 ,255)
+#define LPSelectedColor LPColor(255, 255, 255)
+
+// 随机色
+#define LPRandomColor LPColor(arc4random_uniform(256), arc4random_uniform(256), arc4random_uniform(256))
+
+// 生成一个字符串
+#define LPString(...) [NSString stringWithFormat:__VA_ARGS__]
+
+#define GLOBAL_QUEUE dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+
+#define MAIN_QUEUE dispatch_get_main_queue()
+
+#define noteCenter [NSNotificationCenter defaultCenter]
+
+#define ItemWidth 100.f
+#define ItemHeight 100.f
+#define ItemSpacing 6.f
+#define SectionInset 8.f
+
+#endif
+
+#endif /* PrefixHeader_pch */
