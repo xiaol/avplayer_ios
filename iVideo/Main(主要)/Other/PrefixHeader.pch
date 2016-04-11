@@ -73,6 +73,9 @@
 #define ItemSpacing 6.f
 #define SectionInset 8.f
 
+#define ThemeColor [UIColor colorFromHexString:@"3e4452"]
+#define HighlightedColor [UIColor colorFromHexString:@"ff187a"]
+
 #endif
 
 #endif /* PrefixHeader_pch */

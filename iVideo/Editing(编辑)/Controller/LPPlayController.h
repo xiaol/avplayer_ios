@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LPPlaybackView.h"
+#import "LPPlayback.h"
 
 @class LPPlayController;
 
@@ -47,7 +47,7 @@ typedef void(^LPPlayerItemLoadCompletion)(BOOL completed);
 - (void)jumpedToCMTime:(CMTime)time;
 
 
-@property (nonatomic, strong) LPPlaybackView *view;
+@property (nonatomic, strong) id<LPPlayback> view;
 
 @property (nonatomic, assign) BOOL appendingItems;
 @property (nonatomic, assign) BOOL deleteItem;

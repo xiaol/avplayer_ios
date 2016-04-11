@@ -47,6 +47,7 @@
 
 @property (nonatomic, assign) LPMovieSize movieSize;
 @property (nonatomic, assign) CMTime movieDuration;
+@property (nonatomic, assign) CGSize originalSize;
 
 @end
 
@@ -58,7 +59,6 @@
     if (self = [super init]) {
         _filterGraph = filterGraph;
         
-        // initial setup (queue)
         _mainProcessingQueue = dispatch_queue_create("main processing q", NULL);
         _audioProcessingQueue = dispatch_queue_create("audio processing q", NULL);
         _videoProcessingQueue = dispatch_queue_create("video processing q", NULL);
@@ -67,6 +67,7 @@
         _audioMix = composition.audioMix;
         _videoComposition = composition.videoComposition;
         _movieSize = movieSize;
+        _originalSize = [self sizeWithMovieSize:composition.size];
         _movieDuration = composition.timeRange.duration;
         _outputURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:@"composition.m4v"]];
         
@@ -150,14 +151,15 @@
             NSDictionary *compressVideoSettings = @{AVVideoCodecKey : AVVideoCodecH264,
                                                     AVVideoWidthKey : @([self movieWidth]),
                                                     AVVideoHeightKey : @([self movieHeight]),
+                                                    AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill
                                                     };
             self.videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo
                                                                  outputSettings:compressVideoSettings];
             self.videoInput.expectsMediaDataInRealTime = NO;
             // initialize adaptor
             NSDictionary *pixelBufferAttributes = @{(id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
-                                                    (id)kCVPixelBufferWidthKey : @([self movieWidth]),
-                                                    (id)kCVPixelBufferHeightKey : @([self movieHeight]),
+                                                    (id)kCVPixelBufferWidthKey : @(self.originalSize.width),
+                                                    (id)kCVPixelBufferHeightKey : @(self.originalSize.height),
                                                     (id)kCVPixelFormatOpenGLESCompatibility : (id)kCFBooleanTrue};
             self.adaptor = [[AVAssetWriterInputPixelBufferAdaptor alloc] initWithAssetWriterInput:self.videoInput
                                                                       sourcePixelBufferAttributes:pixelBufferAttributes];
@@ -198,7 +200,7 @@
                                                        if (self.audioFinished) return;
                                                        
                                                        BOOL completedOrFailed = NO;
-                                                       if ([self.audioInput isReadyForMoreMediaData] && !completedOrFailed) {
+                                                       if ([self.audioInput isReadyForMoreMediaData]) {
                                                            CMSampleBufferRef sb = [self.audioMixOutput copyNextSampleBuffer];
                                                            if (sb != NULL) {
                                                                BOOL success = [self.audioInput appendSampleBuffer:sb];
@@ -228,7 +230,7 @@
                                                        if (self.videoFinished) return;
                                                        
                                                        BOOL completedOrFailed = NO;
-                                                       if ([self.videoInput isReadyForMoreMediaData] && !completedOrFailed) {
+                                                       if ([self.videoInput isReadyForMoreMediaData]) {
                                                            CMSampleBufferRef sb = [self.videoCompositionOutput copyNextSampleBuffer];
                                                            if (sb != NULL) {
                                                                CMTime timestamp = CMSampleBufferGetPresentationTimeStamp(sb);
@@ -248,11 +250,12 @@
                                                                CIImage *sourceImage = [CIImage imageWithCVPixelBuffer:imageBuffer];
                                                                self.filterGraph.inputImage = sourceImage;
                                                                CIImage *filteredImage = self.filterGraph.outputImage;
-                                                              
+                                                               
                                                                [self.ciContext render:filteredImage
                                                                       toCVPixelBuffer:pixelBufferOut
                                                                                bounds:sourceImage.extent
                                                                            colorSpace:self.colorSpace];
+                                                               // CGRectMake(0, 0, [self movieWidth], [self movieHeight])
                                                                BOOL success = [self.adaptor appendPixelBuffer:pixelBufferOut withPresentationTime:timestamp];
                                                             
                                                                CVPixelBufferRelease(pixelBufferOut);
@@ -329,7 +332,6 @@
 }
 
 - (void)cancelEncoding {
-    
     dispatch_async(self.mainProcessingQueue, ^{
         if (self.audioInput) {
             dispatch_async(self.audioProcessingQueue, ^{
@@ -357,6 +359,20 @@
     });
 }
 
+- (void)pauseEncoding {
+    dispatch_async(self.mainProcessingQueue, ^{
+        dispatch_suspend(self.audioProcessingQueue);
+        dispatch_suspend(self.videoProcessingQueue);
+    });
+}
+
+- (void)resumeEncoding {
+    dispatch_async(self.mainProcessingQueue, ^{
+        dispatch_resume(self.audioProcessingQueue);
+        dispatch_resume(self.videoProcessingQueue);
+    });
+}
+
 - (CGFloat)movieWidth {
     switch (self.movieSize) {
         case LPMovieSize480P:
@@ -376,6 +392,17 @@
             return LP720pVideoSize.height;
         default:
             return LP1080pVideoSize.height;
+    }
+}
+
+- (CGSize)sizeWithMovieSize:(LPMovieSize)movieSize {
+    switch (movieSize) {
+        case LPMovieSize480P:
+            return LP480pVideoSize;
+        case LPMovieSize720P:
+            return LP720pVideoSize;
+        default:
+            return LP1080pVideoSize;
     }
 }
 @end

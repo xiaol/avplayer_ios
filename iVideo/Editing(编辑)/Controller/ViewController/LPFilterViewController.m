@@ -17,10 +17,10 @@
 #import "LPMovieEncoder.h"
 #import "LPAssetsLibrary.h"
 #import "LPProgressView.h"
+#import "LPMovieSizesView.h"
 
-static NSInteger FilterCount = 2;
 static const CGFloat itemPadding = 10.f;
-static const CGFloat sectionPadding = 10.f;
+static const CGFloat sectionPadding = 22.f;
 
 static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
 
@@ -30,6 +30,9 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
 @property (nonatomic, strong) AVPlayerItemVideoOutput *videoOutput;
 @property (nonatomic, strong) LPFilterView *filterView;
 @property (nonatomic, strong) LPProgressView *progressView;
+@property (nonatomic, strong) UIView *hud;
+@property (nonatomic, strong) LPMovieSizesView *movieSizesView;
+@property (nonatomic, strong) UIButton *exportBtn;
 
 @property (nonatomic, strong) NSArray *filterGraphs;
 
@@ -47,6 +50,12 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
 
 @property (nonatomic, strong) LPMovieEncoder *encoder;
 
+@property (nonatomic, strong) NSArray *images;
+
+@property (nonatomic, strong) CIContext *context;
+
+@property (nonatomic, assign) LPMovieSize selectedMovieSize;
+
 @end
 
 @implementation LPFilterViewController
@@ -55,13 +64,15 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor whiteColor];
+    self.context = [CIContext contextWithOptions:nil];
+    self.selectedMovieSize = self.composition.size;
    
     [self setupFilterGraphs];
     [self setupSubviews];
     [self setupPlayController];
     [self setupDisplayLink];
     
-    [self.collectionView selectItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0] animated:NO scrollPosition:UICollectionViewScrollPositionTop];
+    [self filterImages];
 }
 
 - (void)setupFilterGraphs {
@@ -131,6 +142,9 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     [self setupHeader];
     [self setupPlayView];
     [self setupCollectionView];
+    [self setupMovieSizesView];
+    [self setupExportBtn];
+    [self setupHUD];
     [self setupProgressView];
 }
 
@@ -177,7 +191,7 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     [confirmBtn setTitleColor:[UIColor colorFromHexString:@"8c97ff"] forState:UIControlStateNormal];
     confirmBtn.titleLabel.font = [UIFont boldSystemFontOfSize:15];
     [header addSubview:confirmBtn];
-    //    confirmBtn.hidden = YES;
+    confirmBtn.hidden = YES;
     self.confirmBtn = confirmBtn;
     
     UIView *divider = [[UIView alloc] init];
@@ -214,30 +228,154 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     progressView.center = CGPointMake(CGRectGetMidX(self.view.bounds), CGRectGetMidY(self.view.bounds));
     [self.view addSubview:progressView];
     self.progressView = progressView;
-    progressView.hidden = YES;
+    progressView.alpha = 0;
+}
+
+- (void)setupHUD {
+    UIView *hud = [[UIView alloc] init];
+    hud.backgroundColor = [UIColor colorWithWhite:0.f alpha:.3f];
+    hud.x = 0;
+    hud.y = CGRectGetMaxY(self.header.frame);
+    hud.width = self.view.width;
+    hud.height = self.view.height - hud.y;
+    [self.view addSubview:hud];
+    hud.alpha = 0;
+    self.hud = hud;
 }
 
 - (void)setupCollectionView {
+    
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    CGFloat itemW = (self.view.width - itemPadding * 2 - sectionPadding * 2 - 3) / 3.f;
-    CGFloat itemH = itemW * .8f;
-    layout.itemSize = (CGSize){itemW, itemW};
+    CGFloat itemW = 125.f;
+    CGFloat itemH = 80.f;
+    if (iPhone6Plus) {
+        itemW = 160;
+        itemH = 110;
+    } else if (iPhone4 || iPhone5) {
+        itemW = 90;
+        itemH = 58;
+    }
+    layout.itemSize = (CGSize){itemW, itemH};
     layout.minimumInteritemSpacing = itemPadding;
     layout.minimumLineSpacing = itemPadding;
-    layout.sectionInset = UIEdgeInsetsMake(sectionPadding, sectionPadding, sectionPadding, sectionPadding);
-    layout.scrollDirection = UICollectionViewScrollDirectionVertical;
+    layout.sectionInset = UIEdgeInsetsMake(0, sectionPadding, 0, sectionPadding);
+    layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+    
+    CGFloat labelPadding = 20.f;
+    if (iPhone4) {
+        labelPadding = 7.f;
+    }
+    
+    CGFloat labelY = CGRectGetMaxY(self.playView.frame) + labelPadding;
+    CGFloat labelX = sectionPadding;
+    CGFloat labelW = self.view.width - 2 * sectionPadding;
+    CGFloat labelH = 20.f;
+    UILabel *label = [[UILabel alloc] init];
+    label.text = @"选择滤镜";
+    label.font = [UIFont systemFontOfSize:15];
+    label.frame = CGRectMake(labelX, labelY, labelW, labelH);
+    label.textColor = ThemeColor;
+    [self.view addSubview:label];
     
     UICollectionView *cv = [[UICollectionView alloc] initWithFrame:CGRectZero collectionViewLayout:layout];
     [cv registerClass:[LPFilterCell class] forCellWithReuseIdentifier:LPFilterCellReuseID];
     cv.x = 0;
-    cv.y = CGRectGetMaxY(self.playView.frame) + 20;
-    cv.height = self.view.height - cv.y;
+    cv.y = CGRectGetMaxY(label.frame) + labelPadding;
+    cv.height = itemH;
     cv.width = self.view.width;
     cv.backgroundColor = [UIColor clearColor];
     cv.dataSource = self;
     cv.delegate = self;
+    cv.showsHorizontalScrollIndicator = NO;
     [self.view addSubview:cv];
     self.collectionView = cv;
+}
+
+- (void)setupMovieSizesView {
+    CGFloat deltaY = 20.f;
+    if (iPhone4) {
+        deltaY = 7.f;
+    }
+    CGFloat labelY = CGRectGetMaxY(self.collectionView.frame) + deltaY;
+    
+    CGFloat width = self.view.width - 2 * sectionPadding;
+    CGFloat labelH = 20.f;
+    UILabel *label = [[UILabel alloc] init];
+    label.text = @"选择分辨率";
+    label.textColor = ThemeColor;
+    label.font = [UIFont systemFontOfSize:15];
+    label.frame = CGRectMake(sectionPadding, labelY, width, labelH);
+    [self.view addSubview:label];
+    
+    CGFloat sizeViewH = 60.f;
+    if (iPhone6) {
+        sizeViewH = 50.f;
+    } else if (iPhone5) {
+        sizeViewH = 40;
+    } else if (iPhone4) {
+        sizeViewH = 35.f;
+    }
+    CGFloat padding = 14.f;
+    if (iPhone6Plus) {
+        padding = 17.f;
+    }
+    
+    NSUInteger count = 0;
+    switch (self.composition.size) {
+        case LPMovieSize1080P:
+            count = 3;
+            break;
+        case LPMovieSize720P:
+            count = 2;
+            break;
+        case LPMovieSize480P:
+            count = 1;
+            break;
+        default:
+            break;
+    }
+    
+    __weak typeof(self) wself = self;
+    LPMovieSizesView *movieSizesView = [[LPMovieSizesView alloc] initWithPadding:padding availableSizeCount:count selectionHandler:^(NSInteger movieSizeNumber) {
+        if (movieSizeNumber == 0) {
+            wself.selectedMovieSize = LPMovieSize480P;
+        } else if (movieSizeNumber == 1) {
+            wself.selectedMovieSize = LPMovieSize720P;
+        } else if (movieSizeNumber == 2) {
+            wself.selectedMovieSize = LPMovieSize1080P;
+        }
+    }];
+    movieSizesView.x = sectionPadding;
+    movieSizesView.y = CGRectGetMaxY(label.frame) + deltaY;
+    movieSizesView.width = self.view.width - 2 * sectionPadding;
+    movieSizesView.height = sizeViewH;
+    [self.view addSubview:movieSizesView];
+    self.movieSizesView = movieSizesView;
+}
+
+- (void)setupExportBtn {
+    UIButton *btn = [[UIButton alloc] init];
+    CGFloat btnH = 50;
+    if (iPhone5) {
+        btnH = 40;
+    }
+    CGFloat btnX = sectionPadding;
+    CGFloat btnW = self.view.width - 2 * btnX;
+    CGFloat btnY = (self.view.height + CGRectGetMaxY(self.movieSizesView.frame) - btnH) / 2.f;
+    
+    btn.layer.cornerRadius = 5.f;
+    btn.clipsToBounds = YES;
+    [btn setTitle:@"导出" forState:UIControlStateNormal];
+    [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [btn setBackgroundImage:[UIImage imageWithColor:ThemeColor size:CGSizeMake(btnW, btnH)]
+                   forState:UIControlStateNormal];
+    [btn setBackgroundImage:[UIImage imageWithColor:[UIColor colorFromHexString:@"b6b6b6"] size:CGSizeMake(btnW, btnH)]
+                   forState:UIControlStateSelected];
+    btn.frame = CGRectMake(btnX, btnY, btnW, btnH);
+    [self.view addSubview:btn];
+    self.exportBtn = btn;
+    
+    [btn addTarget:self action:@selector(exportBtnClick:) forControlEvents:UIControlEventTouchUpInside];
 }
 
 - (void)setupPlayController {
@@ -260,11 +398,14 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     self.playController = playController;
 }
 
-- (void)cancelBtnClick:(UIButton *)sender {
-    sender.enabled = NO;
-    
+- (void)cancelBtnClick:(UIButton *)sender {    
     if (self.encoding) {
-        [UIAlertView alertViewShowWithTitle:nil message:@"您当前有未完成的作品, 返回上一级将会中止作品生成" delegate:self cancelButtonTitle:@"取消" otherButtonTitle:@"确定"];
+        [self.encoder pauseEncoding];
+        [UIAlertView alertViewShowWithTitle:nil
+                                    message:@"您当前有未完成的作品, 返回上一级将会中止作品生成"
+                                   delegate:self
+                          cancelButtonTitle:@"取消"
+                           otherButtonTitle:@"确定"];
     } else {
         [self pop];
     }
@@ -279,6 +420,10 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
 }
 
 - (void)confirmBtnClick:(UIButton *)sender {
+    // ...
+}
+
+- (void)exportBtnClick:(UIButton *)sender {
     sender.enabled = NO;
     [self.displayLink invalidate];
     self.displayLink = nil;
@@ -286,11 +431,10 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     self.playController = nil;
     
     self.encoding = YES;
-    self.progressView.hidden = NO;
     
     self.encoder = [[LPMovieEncoder alloc] initWithComposition:self.composition
                                                               filterGraph:self.selectedFilterGraph
-                                                                movieSize:self.composition.size];
+                                                                movieSize:self.selectedMovieSize];
     __weak typeof(self) wself = self;
     [self.encoder startEncodingWithSuccess:^(NSURL *movieURL) {
         LPAssetsLibrary *library = [[LPAssetsLibrary alloc] init];
@@ -309,10 +453,37 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
     }];
 }
 
+- (void)setEncoding:(BOOL)encoding {
+    _encoding = encoding;
+    [UIView animateWithDuration:.3f
+                     animations:^{
+                         self.progressView.alpha = encoding;
+                         self.hud.alpha = encoding;
+                     }];
+}
+
 - (void)setupDisplayLink {
     CADisplayLink *displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(refreshPlayView:)];
     [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     self.displayLink = displayLink;
+}
+
+- (void)filterImages {
+    dispatch_async(GLOBAL_QUEUE, ^{
+        NSMutableArray *array = [NSMutableArray array];
+        for (NSInteger i = 0; i < self.filterGraphs.count; ++ i) {
+            LPFilterGraph *filterGraph = self.filterGraphs[i];
+            CGImageRef cgimage = [self.context createCGImage:filterGraph.outputImage
+                                                    fromRect:filterGraph.extent];
+            [array addObject:[UIImage imageWithCGImage:cgimage]];
+            CGImageRelease(cgimage);
+        }
+        dispatch_async(MAIN_QUEUE, ^{
+            self.images = array;
+            [self.collectionView reloadData];
+            [self.collectionView selectItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0] animated:NO scrollPosition:UICollectionViewScrollPositionCenteredHorizontally];
+        });
+    });
 }
 
 /**
@@ -360,7 +531,9 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     LPFilterCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:LPFilterCellReuseID
                                                                    forIndexPath:indexPath];
-    cell.filterGraph = self.filterGraphs[indexPath.item];
+    LPFilterGraph *fg = self.filterGraphs[indexPath.item];
+    cell.text = fg.effectName;
+    cell.image = self.images[indexPath.item];
     return cell;
 }
 
@@ -380,9 +553,11 @@ static NSString *LPFilterCellReuseID = @"filter.cell.reuse.id";
 #pragma mark - alert view delegate
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (!alertView.title) { // 编码中返回
-        if (buttonIndex == 1) {
+        if (buttonIndex == 1) { // 返回
             [self.encoder cancelEncoding];
             [self pop];
+        } else {
+            [self.encoder resumeEncoding];
         }
     } else if ([alertView.title isEqualToString:@"制作成功!"]) {
         if (buttonIndex == 1) {

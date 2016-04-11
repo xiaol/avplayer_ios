@@ -10,5 +10,7 @@
 #import "LPFilterGraph.h"
 
 @interface LPFilterCell : UICollectionViewCell
-@property (nonatomic, strong) LPFilterGraph *filterGraph;
+//@property (nonatomic, strong) LPFilterGraph *filterGraph;
+@property (nonatomic, strong) UIImage *image;
+@property (nonatomic, copy) NSString *text;
 @end

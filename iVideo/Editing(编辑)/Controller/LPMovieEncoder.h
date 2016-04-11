@@ -34,4 +34,7 @@ typedef void(^LPEncodeProgressHandler)(CGFloat percent);
 
 - (void)cancelEncoding;
 
+- (void)pauseEncoding;
+- (void)resumeEncoding;
+
 @end

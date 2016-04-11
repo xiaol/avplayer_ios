@@ -28,6 +28,7 @@
 		18255FA91C83F6C100708386 /* LPAssetsLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 18255FA81C83F6C100708386 /* LPAssetsLibrary.m */; };
 		18255FAC1C83F7EE00708386 /* LPVideoLibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 18255FAB1C83F7EE00708386 /* LPVideoLibraryViewController.m */; };
 		18255FB81C85541B00708386 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18255FB71C85541B00708386 /* Assets.xcassets */; };
+		1836DB5C1CBB794700892F16 /* LPPlaybackView.h in Sources */ = {isa = PBXBuildFile; fileRef = 1836DB5B1CBB794700892F16 /* LPPlaybackView.h */; };
 		183997861C9AE47B00747A98 /* LPPlayableRangeSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = 183997851C9AE47B00747A98 /* LPPlayableRangeSlider.m */; };
 		183B30721CAB854E003CD427 /* UIAlertView+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 183B30711CAB854E003CD427 /* UIAlertView+Additions.m */; };
 		183B30751CABAAC4003CD427 /* LPProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 183B30741CABAAC4003CD427 /* LPProgressView.m */; };
@@ -54,6 +55,7 @@
 		18A7D43A1C75D29E000A034A /* LPAudioItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 18A7D4391C75D29E000A034A /* LPAudioItem.m */; };
 		18A7D43D1C78D20F000A034A /* LPCompositionBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 18A7D43C1C78D20F000A034A /* LPCompositionBuilder.m */; };
 		18A7D4401C7ADDFA000A034A /* LPTransitionInstructionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 18A7D43F1C7ADDFA000A034A /* LPTransitionInstructionHelper.m */; };
+		18B228221CB779B40031E3FF /* LPMovieSizesView.m in Sources */ = {isa = PBXBuildFile; fileRef = 18B228211CB779B40031E3FF /* LPMovieSizesView.m */; };
 		18D150411C42D41E00DA258A /* AVMetadataItem+KeyString.m in Sources */ = {isa = PBXBuildFile; fileRef = 18D150101C42D41E00DA258A /* AVMetadataItem+KeyString.m */; };
 		18D150421C42D41E00DA258A /* NSMutableAttributedString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 18D150121C42D41E00DA258A /* NSMutableAttributedString+Additions.m */; };
 		18D150431C42D41E00DA258A /* NSString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 18D150141C42D41E00DA258A /* NSString+Additions.m */; };
@@ -121,7 +123,6 @@
 		18156FF61C311FD400B5ACD5 /* iVideoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iVideoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		18156FFA1C311FD400B5ACD5 /* iVideoUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iVideoUITests.m; sourceTree = "<group>"; };
 		18156FFC1C311FD400B5ACD5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1820C7B81C860A10000A9913 /* LPPlaybackView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPPlaybackView.h; sourceTree = "<group>"; };
 		1820C7B91C860A10000A9913 /* LPPlaybackView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LPPlaybackView.m; sourceTree = "<group>"; };
 		1820C7BC1C871EEF000A9913 /* LPPlayControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPPlayControl.h; sourceTree = "<group>"; };
 		1820C7BD1C871EEF000A9913 /* LPPlayControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LPPlayControl.m; sourceTree = "<group>"; };
@@ -154,6 +155,8 @@
 		18255FAA1C83F7EE00708386 /* LPVideoLibraryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPVideoLibraryViewController.h; sourceTree = "<group>"; };
 		18255FAB1C83F7EE00708386 /* LPVideoLibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LPVideoLibraryViewController.m; sourceTree = "<group>"; };
 		18255FB71C85541B00708386 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1836DB5A1CBB794700892F16 /* LPPlayback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPPlayback.h; sourceTree = "<group>"; };
+		1836DB5B1CBB794700892F16 /* LPPlaybackView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPPlaybackView.h; sourceTree = "<group>"; };
 		183997841C9AE47B00747A98 /* LPPlayableRangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPPlayableRangeSlider.h; sourceTree = "<group>"; };
 		183997851C9AE47B00747A98 /* LPPlayableRangeSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LPPlayableRangeSlider.m; sourceTree = "<group>"; };
 		183B30701CAB854E003CD427 /* UIAlertView+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIAlertView+Additions.h"; sourceTree = "<group>"; };
@@ -207,6 +210,8 @@
 		18A7D43C1C78D20F000A034A /* LPCompositionBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LPCompositionBuilder.m; sourceTree = "<group>"; };
 		18A7D43E1C7ADDFA000A034A /* LPTransitionInstructionHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LPTransitionInstructionHelper.h; path = Builder/LPTransitionInstructionHelper.h; sourceTree = "<group>"; };
 		18A7D43F1C7ADDFA000A034A /* LPTransitionInstructionHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LPTransitionInstructionHelper.m; path = Builder/LPTransitionInstructionHelper.m; sourceTree = "<group>"; };
+		18B228201CB779B40031E3FF /* LPMovieSizesView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LPMovieSizesView.h; sourceTree = "<group>"; };
+		18B228211CB779B40031E3FF /* LPMovieSizesView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LPMovieSizesView.m; sourceTree = "<group>"; };
 		18D1500F1C42D41E00DA258A /* AVMetadataItem+KeyString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AVMetadataItem+KeyString.h"; sourceTree = "<group>"; };
 		18D150101C42D41E00DA258A /* AVMetadataItem+KeyString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AVMetadataItem+KeyString.m"; sourceTree = "<group>"; };
 		18D150111C42D41E00DA258A /* NSMutableAttributedString+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableAttributedString+Additions.h"; sourceTree = "<group>"; };
@@ -372,8 +377,9 @@
 		1820C7B71C860939000A9913 /* LPPlaybackView */ = {
 			isa = PBXGroup;
 			children = (
-				1820C7B81C860A10000A9913 /* LPPlaybackView.h */,
 				1820C7B91C860A10000A9913 /* LPPlaybackView.m */,
+				1836DB5A1CBB794700892F16 /* LPPlayback.h */,
+				1836DB5B1CBB794700892F16 /* LPPlaybackView.h */,
 			);
 			path = LPPlaybackView;
 			sourceTree = "<group>";
@@ -546,6 +552,8 @@
 				1820C7B71C860939000A9913 /* LPPlaybackView */,
 				18255F891C7C119800708386 /* LPLineCV */,
 				189CB6531C707A8700D2B80F /* LPRangeSlider */,
+				18B228201CB779B40031E3FF /* LPMovieSizesView.h */,
+				18B228211CB779B40031E3FF /* LPMovieSizesView.m */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -852,7 +860,7 @@
 				TargetAttributes = {
 					18156FD11C311FD400B5ACD5 = {
 						CreatedOnToolsVersion = 7.2;
-						DevelopmentTeam = 6BWPZAXBUP;
+						DevelopmentTeam = SUMWVW3JRU;
 					};
 					18156FEA1C311FD400B5ACD5 = {
 						CreatedOnToolsVersion = 7.2;
@@ -920,6 +928,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1836DB5C1CBB794700892F16 /* LPPlaybackView.h in Sources */,
 				1820EE101C9EF05100FA075B /* LPVideoAssetCell.m in Sources */,
 				18D150A31C52180500DA258A /* LPCaptureButton.m in Sources */,
 				189CB65D1C73114600D2B80F /* LPEditViewController.m in Sources */,
@@ -939,6 +948,7 @@
 				18D150721C44F55300DA258A /* LPCameraView.m in Sources */,
 				18D150471C42D41E00DA258A /* LPHomeViewController.m in Sources */,
 				18A7D4371C75A87E000A034A /* LPVideoTransition.m in Sources */,
+				18B228221CB779B40031E3FF /* LPMovieSizesView.m in Sources */,
 				18255F9F1C7C3E1200708386 /* LPMediaItemCell.m in Sources */,
 				18D1508C1C4E254900DA258A /* LPMovieWriter.m in Sources */,
 				18F952D81C99463B00739D4E /* UIControl+Swizzle.m in Sources */,
@@ -1117,9 +1127,9 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_PREFIX_HEADER = "iVideo/Main(主要)/Other/PrefixHeader.pch";
 				INFOPLIST_FILE = iVideo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = classroom.iVideo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myLab.iVideo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1133,9 +1143,9 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_PREFIX_HEADER = "iVideo/Main(主要)/Other/PrefixHeader.pch";
 				INFOPLIST_FILE = iVideo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = classroom.iVideo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myLab.iVideo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

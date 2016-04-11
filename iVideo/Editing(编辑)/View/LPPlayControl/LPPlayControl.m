@@ -36,20 +36,21 @@ static const CGFloat top = 0.f;
         self.progressLabel = progressLabel;
         
         UIButton *toggleBtn = [[UIButton alloc] init];
-        toggleBtn.enlargedEdge = 5;
         [toggleBtn setBackgroundImage:[UIImage imageNamed:@"暂停"] forState:UIControlStateNormal];
         [toggleBtn setBackgroundImage:[UIImage imageNamed:@"播放"] forState:UIControlStateSelected];
         [toggleBtn addTarget:self action:@selector(toggleBtnClicked) forControlEvents:UIControlEventTouchUpInside];
         toggleBtn.backgroundColor = [UIColor clearColor];
         [self addSubview:toggleBtn];
         self.toggleBtn = toggleBtn;
+        toggleBtn.enlargedEdge = 5.f;
         
         UIButton *fullScreenBtn = [[UIButton alloc] init];
-        fullScreenBtn.enlargedEdge = 5;
         [fullScreenBtn setBackgroundImage:[UIImage imageNamed:@"全屏"] forState:UIControlStateNormal];
         fullScreenBtn.backgroundColor = [UIColor clearColor];
         [self addSubview:fullScreenBtn];
         self.fullScreenBtn = fullScreenBtn;
+        [fullScreenBtn addTarget:self action:@selector(fullScreenBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        fullScreenBtn.enlargedEdge = 5.f;
         
         UILabel *durationLabel = [[UILabel alloc] init];
         durationLabel.font = [UIFont systemFontOfSize:12];
@@ -78,29 +79,34 @@ static const CGFloat top = 0.f;
     [super layoutSubviews];
     
     self.progressLabel.x = 8;
-    self.progressLabel.y = top;
+    self.progressLabel.y = 0;
     self.progressLabel.width = 35;
-    self.progressLabel.height = 30;
+    self.progressLabel.height = self.height;
 
     self.toggleBtn.x = CGRectGetMaxX(self.progressLabel.frame) + 6;
-    self.toggleBtn.y = top;
+    self.toggleBtn.y = 0;
     self.toggleBtn.width = 25;
-    self.toggleBtn.height = 30;
+    self.toggleBtn.height = self.height;
     
-    self.fullScreenBtn.y = top + 8;
-    self.fullScreenBtn.width = 14;
-    self.fullScreenBtn.height = 14;
+    CGFloat fullScreenW = 16.f;
+    self.fullScreenBtn.y = (self.height - fullScreenW) / 2.f;
+    self.fullScreenBtn.width = fullScreenW;
+    self.fullScreenBtn.height = fullScreenW;
     self.fullScreenBtn.x = self.width - 8 - self.fullScreenBtn.width;
 
     self.durationLabel.width = 35;
-    self.durationLabel.height = 30;
-    self.durationLabel.y = top;
+    self.durationLabel.height = self.height;
+    self.durationLabel.y = 0;
     self.durationLabel.x = CGRectGetMinX(self.fullScreenBtn.frame) - 10 - self.durationLabel.width;
 
     self.slider.x = CGRectGetMaxX(self.toggleBtn.frame) + 8;
     self.slider.height = 18;
-    self.slider.y = top + 7;
+    self.slider.y = (self.height - self.slider.height) / 2.f;
     self.slider.width = CGRectGetMinX(self.durationLabel.frame) - self.slider.x - 8;
+}
+
+- (void)fullScreenBtnClick {
+    [self.delegate playControlWillPlayFullScreen:self];
 }
 
 - (void)sliderTracking:(UISlider *)slider {

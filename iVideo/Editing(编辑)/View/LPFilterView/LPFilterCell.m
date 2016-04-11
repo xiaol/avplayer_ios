@@ -11,8 +11,9 @@
 
 @interface LPFilterCell ()
 @property (nonatomic, strong) UIImageView *imageView;
-@property (nonatomic, strong) CIContext *context;
 @property (nonatomic, strong) UILabel *label;
+@property (nonatomic, strong) UIView *hud;
+@property (nonatomic, strong) CAShapeLayer *borderLayer;
 @end
 
 @implementation LPFilterCell
@@ -25,49 +26,59 @@
         [self.contentView addSubview:imageView];
         self.imageView = imageView;
         
+        UIView *hud = [[UIView alloc] init];
+        hud.backgroundColor = [UIColor colorWithWhite:0.f alpha:.3f];
+        [self.contentView addSubview:hud];
+        self.hud = hud;
+        
         UILabel *label = [[UILabel alloc] init];
         label.textAlignment = NSTextAlignmentCenter;
-        label.textColor = [UIColor colorFromHexString:@"3e4452"];
+        label.textColor = [UIColor whiteColor];
         label.font = [UIFont boldSystemFontOfSize:15];
         label.numberOfLines = 0;
         [self.contentView addSubview:label];
         self.label = label;
         
-        self.context = [CIContext contextWithOptions:nil];
+        CAShapeLayer *borderLayer = [CAShapeLayer layer];
+        borderLayer.lineWidth = 2;
+        borderLayer.strokeColor = [UIColor colorFromHexString:@"ff187a"].CGColor;
+        borderLayer.fillColor = [UIColor clearColor].CGColor;
+        borderLayer.hidden = YES;
+        [self.contentView.layer addSublayer:borderLayer];
+        self.borderLayer = borderLayer;
     }
     return self;
 }
 
 - (void)layoutSubviews {
-    self.imageView.frame = self.bounds;
-    self.imageView.height = self.height * 0.8;
+    [super layoutSubviews];
     
-    self.label.x = 0;
-    self.label.y = self.height * 0.8;
-    self.label.width = self.width;
-    self.label.height = self.height - self.label.y;
+    self.imageView.frame = self.bounds;
+    self.hud.frame = self.bounds;
+    self.label.frame = self.bounds;
+    self.borderLayer.path = [UIBezierPath bezierPathWithRect:CGRectInset(self.bounds, 1.f, 1.f)].CGPath;
 }
 
-- (void)setFilterGraph:(LPFilterGraph *)filterGraph {
-    _filterGraph = filterGraph;
+- (void)setText:(NSString *)text {
+    _text = text;
     
-    self.label.text = filterGraph.effectName;
-    dispatch_async(GLOBAL_QUEUE, ^{
-        CGImageRef cgimage = [self.context createCGImage:filterGraph.outputImage fromRect:filterGraph.extent];
-        dispatch_async(MAIN_QUEUE, ^{
-            self.imageView.image = [UIImage imageWithCGImage:cgimage];
-            CGImageRelease(cgimage);
-        });
-    });
+    self.label.text = text;
+}
+
+- (void)setImage:(UIImage *)image {
+    _image = image;
+    
+    self.imageView.image = image;
 }
 
 - (void)setSelected:(BOOL)selected {
     [super setSelected:selected];
-    if (selected) {
-        self.label.textColor = [UIColor colorFromHexString:@"8c97ff"];
-    } else {
-        self.label.textColor = [UIColor colorFromHexString:@"3e4452"];
-    }
+    
+    self.borderLayer.hidden = !selected;
+}
+
+- (void)setSelectedBackgroundView:(UIView *)selectedBackgroundView {
+    
 }
 
 @end

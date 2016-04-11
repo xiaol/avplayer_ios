@@ -64,9 +64,12 @@ static const CMTime LPDefaultTransitionDuration = {1, 1, 1, 0};
     // 1. A-B模式视频轨道 与 附带音频轨道
     AVMutableCompositionTrack *trackA = [self.composition addMutableTrackWithMediaType:AVMediaTypeVideo
                                                                       preferredTrackID:trackID];
-    AVMutableCompositionTrack *trackB = [self.composition addMutableTrackWithMediaType:AVMediaTypeVideo
-                                                                      preferredTrackID:trackID];
-    NSArray *videoTracks = @[trackA, trackB];
+    NSMutableArray *videoTracks = [NSMutableArray arrayWithObject:trackA];
+    if (self.timeline.videos.count > 1) {
+        AVMutableCompositionTrack *trackB = [self.composition addMutableTrackWithMediaType:AVMediaTypeVideo
+                                                                          preferredTrackID:trackID];
+        [videoTracks addObject:trackB];
+    }
     
     CMTime cursor = kCMTimeZero;
     CMTime transitionDuration = kCMTimeZero;

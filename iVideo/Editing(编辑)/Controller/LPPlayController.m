@@ -13,7 +13,7 @@ static const NSString *LPPlayerItemStatusContext;
 @interface LPPlayController ()
 @property (nonatomic, strong) AVPlayerItem *playerItem;
 @property (nonatomic, strong) AVPlayer *player;
-@property (nonatomic, strong) LPPlaybackView *playbackView;
+@property (nonatomic, strong) id<LPPlayback> playbackView;
 
 @property (nonatomic, strong) id timeObserver;
 @property (nonatomic, assign) float lastRate;
@@ -26,13 +26,16 @@ static const NSString *LPPlayerItemStatusContext;
 
 @implementation LPPlayController
 
-- (LPPlaybackView *)view {
+- (id<LPPlayback>)view {
     return self.playbackView;
+}
+
+- (void)setView:(id<LPPlayback>)view {
+    self.playbackView = view;
 }
 
 - (instancetype)init {
     if (self = [super init]) {
-        _playbackView = [[LPPlaybackView alloc] init];
         _observeInterval = .1f;
     }
     return self;
@@ -52,7 +55,7 @@ static const NSString *LPPlayerItemStatusContext;
     if (!self.player) { // 初次加载
         self.player = [AVPlayer playerWithPlayerItem:playerItem];
         if(self.playbackView) {
-            self.playbackView.player = self.player;
+            [self.playbackView setPlayer:self.player];
             [self.playbackView prepareForPlaying];
         }
     } else {

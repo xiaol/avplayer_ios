@@ -30,7 +30,11 @@
                                   audioMix:(AVAudioMix *)audioMix
                                  timeRange:(CMTimeRange)timeRange
                                       size:(LPMovieSize)size {
-    return [[self alloc] initWithComposition:composition videoComposition:videoComposition audioMix:audioMix timeRange:timeRange size:size];
+    return [[self alloc] initWithComposition:composition
+                            videoComposition:videoComposition
+                                    audioMix:audioMix
+                                   timeRange:timeRange
+                                        size:size];
 }
 
 - (AVPlayerItem *)makePlayerItem {

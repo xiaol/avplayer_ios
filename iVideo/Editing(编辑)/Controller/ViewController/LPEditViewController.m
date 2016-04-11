@@ -27,6 +27,7 @@
 #import "LPMusicLibraryViewController.h"
 #import "LPSubtitleViewController.h"
 #import "LPFilterViewController.h"
+#import <libkern/OSAtomic.h>
 
 static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
 
@@ -40,6 +41,8 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
 @property (nonatomic, strong) UIView *bgView;
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) LPPlayControl *playControl;
+@property (nonatomic, strong) UIButton *subtitleBtn;
+@property (nonatomic, strong) UIButton *recordBtn;
 
 @property (nonatomic, strong) UIActivityIndicatorView *indicator;
 
@@ -64,6 +67,10 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
 
 @property (nonatomic, strong) LPComposition *composition;
 
+@property (nonatomic, assign) UIDeviceOrientation playbackOrientation;
+@property (nonatomic, assign) CGRect playbackPortraitFrame;
+@property (nonatomic, assign) BOOL statusBarHidden;
+
 @end
 
 @implementation LPEditViewController
@@ -72,26 +79,22 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
     
-//    NSArray *names = [CIFilter filterNamesInCategory:kCICategoryBuiltIn];
-//    for (NSString *name in names) {
-//        NSLog(@"滤波器名称 --- %@", name);
-//        CIFilter *filter = [CIFilter filterWithName:name];
-//        for (NSString *inputKey in filter.inputKeys) {
-//            NSLog(@"参数:%@", inputKey);
-//        }
-//    }
-    
-    
-
-    
     self.playController = [[LPPlayController alloc] init];
     self.playController.delegate = self;
     self.timeline = [[LPTimeline alloc] init];
+    self.playbackOrientation = UIDeviceOrientationPortrait;
 
     [self setupSubviews];
     [self toggleOffControl:self];
     
-    [noteCenter addObserver:self selector:@selector(transitionTypeChanged:) name:LPTransitionTypeChangedNotification object:nil];
+    [noteCenter addObserver:self
+                   selector:@selector(transitionTypeChanged:)
+                       name:LPTransitionTypeChangedNotification
+                     object:nil];
+    [noteCenter addObserver:self
+                   selector:@selector(processDeviceRotation:)
+                       name:UIDeviceOrientationDidChangeNotification
+                     object:nil];
     
     [self hooks];
 }
@@ -107,6 +110,8 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     [self setupBgView];
     [self setupCollectionView];
     [self setupPlayControl];
+    [self setupSubtitleAndRecordView];
+    [self.view bringSubviewToFront:self.playbackView];
 }
 
 - (void)setupHeader {
@@ -177,14 +182,15 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     } else if (iPhone6Plus) {
         padding = 46.f;
     }
-    LPPlaybackView *playbackView = self.playController.view;
+    LPPlaybackView *playbackView = [[LPPlaybackView alloc] init];
     playbackView.width = ScreenWidth;
     playbackView.height = PlaybackViewHeight;
     playbackView.x = 0;
     playbackView.y = CGRectGetMaxY(self.header.frame) + padding;
     [self.view addSubview:playbackView];
     self.playbackView = playbackView;
-    
+    self.playbackPortraitFrame = playbackView.frame;
+    self.playController.view = playbackView;
 }
 
 - (void)setupClipSlider {
@@ -261,12 +267,54 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
 }
 
 - (void)setupPlayControl {
-    CGFloat y = CGRectGetMaxY(self.collectionView.frame);
-    CGFloat h = self.bgView.height - y;
-    LPPlayControl *playControl = [[LPPlayControl alloc] initWithFrame:CGRectMake(0.f, y, self.bgView.width, h)];
+    CGFloat padding = 40.f;
+    if (iPhone5) {
+        padding = 23.f;
+    } else if (iPhone6Plus) {
+        padding = 33.f;
+    } else if (iPhone4) {
+        padding = 13.f;
+    }
+    CGFloat h = 30.f;
+    padding -= (h - 16) / 2.f;
+    CGFloat y = CGRectGetMaxY(self.collectionView.frame) + padding;
+    LPPlayControl *playControl = [[LPPlayControl alloc] initWithFrame:CGRectMake(0.f, y, self.view.width, h)];
     [self.bgView addSubview:playControl];
     playControl.delegate = self;
     self.playControl = playControl;
+}
+
+- (void)setupSubtitleAndRecordView {
+    CGFloat padding = 22.f;
+    CGFloat spacing = 30.f;
+    if (iPhone6) {
+        padding = 15.f;
+    } else {
+        padding = 10.f;
+    }
+    CGFloat x = 10.f;
+    CGFloat h = 21.f;
+    CGFloat w = h;
+    CGFloat y = self.view.height - h - padding;
+    UIButton *subtitleBtn = [[UIButton alloc] init];
+    subtitleBtn.frame = CGRectMake(x, y, w, h);
+    [subtitleBtn setBackgroundImage:[UIImage imageNamed:@"字幕"] forState:UIControlStateNormal];
+    [subtitleBtn setBackgroundImage:[UIImage imageNamed:@"字幕不能点击"] forState:UIControlStateDisabled];
+    [self.view addSubview:subtitleBtn];
+    self.subtitleBtn = subtitleBtn;
+    [subtitleBtn addTarget:self
+                    action:@selector(subtitleBtnClicked)
+          forControlEvents:UIControlEventTouchUpInside];
+    
+    UIButton *recordBtn = [[UIButton alloc] init];
+    recordBtn.frame = CGRectMake(x + w + spacing, y, w, h);
+    [recordBtn setBackgroundImage:[UIImage imageNamed:@"旁白"] forState:UIControlStateNormal];
+    [recordBtn setBackgroundImage:[UIImage imageNamed:@"旁白不能点击"] forState:UIControlStateDisabled];
+    [self.view addSubview:recordBtn];
+    self.recordBtn = recordBtn;
+    [recordBtn addTarget:self
+                    action:@selector(recordBtnClicked)
+          forControlEvents:UIControlEventTouchUpInside];
 }
 
 #pragma mark - hooks into ADD, REMOVE and EXCHANGE
@@ -564,7 +612,11 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     // 2. reload cv 更新cell视图选中状态
     [self.collectionView reloadData];
     
-    // 3. cv滚动到合适位置
+    // 3. 能否插入字幕
+    CMTimeRange tr = [self.timeline.passThroughRanges[item] CMTimeRangeValue];
+    self.subtitleBtn.enabled = self.recordBtn.enabled = (CMTimeGetSeconds(tr.duration) > 0);
+    
+    // 4. cv滚动到合适位置
     if (!processingCell.selected) { // 播放中自行选中 或 拖拽slider自行选中
         // 调整contentOffset
 //        NSUInteger item = processingIndexPath.item;
@@ -799,6 +851,10 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     }
 }
 
+- (void)playControlWillPlayFullScreen:(LPPlayControl *)playControl {
+    [self setPlaybackOrientation:UIDeviceOrientationLandscapeLeft completion:nil];
+}
+
 #pragma mark - play controller delegate
 - (void)playController:(LPPlayController *)playController currentPlayingTime:(NSTimeInterval)currentPlayingTime duration:(NSTimeInterval)duration {
     self.currentTime = currentPlayingTime;
@@ -829,10 +885,14 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
 #pragma mark - play control & clip slider toggle
 - (void)toggleOnControl:(id)target {
     [target playControl].userInteractionEnabled = [target clipSlider].userInteractionEnabled = YES;
+    NSInteger item = [target processingIndexPath].item;
+    CMTimeRange tr = [[target timeline].passThroughRanges[item] CMTimeRangeValue];
+    [target subtitleBtn].enabled = [target recordBtn].enabled = (CMTimeGetSeconds(tr.duration) > 0);
 }
 
 - (void)toggleOffControl:(id)target {
     [target playControl].userInteractionEnabled = [target clipSlider].userInteractionEnabled = NO;
+    [target subtitleBtn].enabled = [target recordBtn].enabled = NO;
 }
 
 #pragma mark - add music
@@ -867,13 +927,17 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     }];
 }
 
-#pragma mark - add subtitle
+#pragma mark - add subtitle && recoding
 - (void)subtitleBtnClicked {
     LPSubtitleViewController *subtitleVc = [[LPSubtitleViewController alloc] init];
     subtitleVc.videos = self.timeline.videos;
     [self presentViewController:subtitleVc animated:YES completion:^{
         
     }];
+}
+
+- (void)recordBtnClicked {
+    
 }
 
 #pragma mark - export composition
@@ -888,4 +952,81 @@ static NSString *LPMediaItemCVReuseID = @"media.item.cv.reuse.id";
     filterVc.asset = video.asset;
     [self.navigationController pushViewController:filterVc animated:YES];
 }
+
+#pragma mark - device rotation
+//- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+//    return UIInterfaceOrientationMaskAll;
+//}
+
+- (void)processDeviceRotation:(NSNotification *)note {
+    if (!self.playControl.userInteractionEnabled) return; // 不可播放, 直接返回
+    
+    self.playbackOrientation = [UIDevice currentDevice].orientation;
+}
+
+#pragma mark - process playback rotation
+- (void)setPlaybackOrientation:(UIDeviceOrientation)playbackOrientation {
+    [self setPlaybackOrientation:playbackOrientation completion:nil];
+}
+
+- (void)setPlaybackOrientation:(UIDeviceOrientation)playbackOrientation
+                    completion:(void (^)(void))completion {
+    if (_playbackOrientation == playbackOrientation ||
+        playbackOrientation == UIDeviceOrientationFaceUp ||
+        playbackOrientation == UIDeviceOrientationFaceDown)
+        return;
+    
+    void (^rotateLandscapeLeft)() = ^() {
+        self.playbackView.transform = CGAffineTransformMakeRotation(M_PI_2);
+        self.playbackView.frame = self.view.bounds;
+    };
+    void (^rotateLandscapeRight)() = ^() {
+        self.playbackView.transform = CGAffineTransformMakeRotation(- M_PI_2);
+        self.playbackView.frame = self.view.bounds;
+    };
+    void (^rotatePortrait)() = ^() {
+        self.playbackView.transform = CGAffineTransformIdentity;
+        self.playbackView.frame = self.playbackPortraitFrame;
+    };
+
+    [UIView animateWithDuration:.5f animations:^{
+        switch (playbackOrientation) {
+            case UIDeviceOrientationLandscapeLeft:
+                rotateLandscapeLeft();
+                break;
+            case UIDeviceOrientationLandscapeRight:
+                rotateLandscapeRight();
+                break;
+            case UIDeviceOrientationPortrait:
+                rotatePortrait();
+                break;
+            default:
+                break;
+        }
+    } completion:^(BOOL finished) {
+        if (completion) {
+            completion();
+        }
+        _playbackOrientation = playbackOrientation;
+    }];
+    
+    self.statusBarHidden = (playbackOrientation == UIDeviceOrientationLandscapeLeft ||
+                            playbackOrientation == UIDeviceOrientationLandscapeRight);
+    [self setNeedsStatusBarAppearanceUpdate];
+}
+
+- (BOOL)prefersStatusBarHidden {
+    return self.statusBarHidden;
+}
+
+- (UIStatusBarAnimation)preferredStatusBarUpdateAnimation {
+    return self.statusBarHidden ? UIStatusBarAnimationFade : UIStatusBarAnimationNone;
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    UITouch *touch = [touches anyObject];
+    NSLog(@"%@ in %@", NSStringFromCGPoint([touch locationInView:touch.view]), NSStringFromClass([touch.view class]));
+    NSLog(@"%@", NSStringFromCGRect(self.playbackView.bounds));
+}
+
 @end
